@@ -5,9 +5,13 @@
 This is a voting system API built using Node.js, Express, PostgreSQL, and JWT authentication. The API allows users to manage voting rooms, candidates, voters, and cast votes. It also provides endpoints for user login and results retrieval.
 
 ### Key Features:
-- **JWT Authentication**: Secure endpoints for managing voting rooms, candidates, and voters.
+- **JWT Authentication**: Secure endpoints for managing voting rooms, candidates, and voters to allow only authorized access.
+- **Voter Authentication**: Voters details and ids are cross-verified to ensure only valid voters can cast votes.
 - **Voting Functionality**: Voters can cast their votes, which are validated and securely stored.
+- **Voting Decay**: A weighted voting system with a decay factor to prevent strategic voting.
 - **Vote Results**: Fetches weighted voting results based on the number of votes and a decay factor.
+- **Anonymity**: Voters are anonymous, and their votes are securely stored without revealing their identity.
+- **Encrypted Passwords**: Passwords are securely hashed using bcrypt for user authentication.
 
 ## Voting Decay Explanation
 
@@ -52,13 +56,7 @@ This system ensures that **voters are encouraged to vote honestly**, and it miti
 2. Add Candidates
 3. Add Voters
 
----
-
-## Authentication
-
-### JWT Token Authentication
-Protected routes require a valid JWT token. You must include the token in the `Authorization` header in the format:
-
+API Documentation is available in the [wiki](https://github.com/DharunThota/secure-fair-voting-system/wiki).
 
 ## Database Structure
 
@@ -71,6 +69,8 @@ The following tables are used in this voting system:
 5. **`VOTER`**: Stores voters with hashed credentials.
 6. **`VOTE`**: Stores votes for candidates in specific rooms.
 7. **`VOTED_IN`**: Tracks which voters have voted in which rooms.
+
+The database schema is available in the file [schema.sql](https://github.com/DharunThota/secure-fair-voting-system/blob/main/schema.sql).
 
 ## Security
 
