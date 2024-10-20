@@ -71,6 +71,8 @@ The following tables are used in this voting system:
 7. **`VOTED_IN`**: Tracks which voters have voted in which rooms.
 
 The database schema is available in the file [schema.sql](https://github.com/DharunThota/secure-fair-voting-system/blob/main/schema.sql).
+![Database Schema Diagram](./public/schema_diagram.png)
+
 
 ## Security
 
