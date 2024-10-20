@@ -71,6 +71,7 @@ The following tables are used in this voting system:
 7. **`VOTED_IN`**: Tracks which voters have voted in which rooms.
 
 The database schema is available in the file [schema.sql](https://github.com/DharunThota/secure-fair-voting-system/blob/main/schema.sql).
+
 ![Database Schema Diagram](./public/schema_diagram.png)
 
 
@@ -98,6 +99,10 @@ The database schema is available in the file [schema.sql](https://github.com/Dha
 4. Start the server:
     ```bash
     npm start
+    ```
+5. Test the API using test.js: 
+    ```bash
+    node test.js
     ```
 
 The server will run on port `3000`.
