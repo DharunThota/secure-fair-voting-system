@@ -173,7 +173,7 @@ app.post("/api/v1/voting-room/:id/vote", async (req, res) => {
 
 // Get the results (No authentication required to view results)
 app.get("/api/v1/voting-room/:id/results", async (req, res) => {
-    const decay = 0.1;
+    const decay = 0.125;
     try {
         const candidates = await db.query("SELECT candidate_id FROM STANDING_IN WHERE room_id = $1;", [req.params.id]);
         const results = {};
