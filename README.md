@@ -79,6 +79,12 @@ The database schema is available in the file [schema.sql](https://github.com/Dha
 
 - **JWT Token**: Admin-related actions are protected by JWT tokens. Tokens expire after 1 hour.
 - **Bcrypt Hashing**: Voter and admin passwords are securely hashed using bcryptjs.
+
+## Video Demonstration
+
+You can watch the demo of the voting system by clicking the link below:
+
+[Demo Link](https://youtu.be/tg9_tqFFMU4)
   
 ## Setup Instructions
 
