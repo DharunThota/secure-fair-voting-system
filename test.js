@@ -104,16 +104,16 @@ const main = async () => {
 
         // Step 5: Cast votes based on the example
         const votesData = [
-            { voterId: voters[0], votes: { [candidateA.candidate_id]: 2, [candidateB.candidate_id]: 8 }, fname: 'Voter 1', lname: 'LastName 1' },
-            { voterId: voters[1], votes: { [candidateA.candidate_id]: 1, [candidateB.candidate_id]: 9 }, fname: 'Voter 2', lname: 'LastName 2' },
+            { voterId: voters[0], votes: { [candidateB.candidate_id]: 10 }, fname: 'Voter 1', lname: 'LastName 1' },
+            { voterId: voters[1], votes: { [candidateB.candidate_id]: 10 }, fname: 'Voter 2', lname: 'LastName 2' },
             { voterId: voters[2], votes: { [candidateB.candidate_id]: 10 }, fname: 'Voter 3', lname: 'LastName 3' },
-            { voterId: voters[3], votes: { [candidateA.candidate_id]: 5, [candidateB.candidate_id]: 5 }, fname: 'Voter 4', lname: 'LastName 4' },
-            { voterId: voters[4], votes: { [candidateA.candidate_id]: 7, [candidateB.candidate_id]: 3 }, fname: 'Voter 5', lname: 'LastName 5' },
+            { voterId: voters[3], votes: { [candidateB.candidate_id]: 10 }, fname: 'Voter 4', lname: 'LastName 4' },
+            { voterId: voters[4], votes: { [candidateA.candidate_id]: 7, [candidateC.candidate_id]: 3 }, fname: 'Voter 5', lname: 'LastName 5' },
             { voterId: voters[5], votes: { [candidateA.candidate_id]: 5, [candidateB.candidate_id]: 2, [candidateC.candidate_id]: 3 }, fname: 'Voter 6', lname: 'LastName 6' },
             { voterId: voters[6], votes: { [candidateA.candidate_id]: 9, [candidateB.candidate_id]: 1 }, fname: 'Voter 7', lname: 'LastName 7' },
             { voterId: voters[7], votes: { [candidateA.candidate_id]: 6, [candidateC.candidate_id]: 4 }, fname: 'Voter 8', lname: 'LastName 8' },
-            { voterId: voters[8], votes: { [candidateA.candidate_id]: 5, [candidateB.candidate_id]: 5 }, fname: 'Voter 9', lname: 'LastName 9' },
-            { voterId: voters[9], votes: { [candidateA.candidate_id]: 4, [candidateC.candidate_id]: 6 }, fname: 'Voter 10', lname: 'LastName 10' },
+            { voterId: voters[8], votes: { [candidateA.candidate_id]: 5, [candidateC.candidate_id]: 5 }, fname: 'Voter 9', lname: 'LastName 9' },
+            { voterId: voters[9], votes: { [candidateA.candidate_id]: 6, [candidateC.candidate_id]: 4 }, fname: 'Voter 10', lname: 'LastName 10' },
         ];
 
         // Step 6: Cast votes for each voter
