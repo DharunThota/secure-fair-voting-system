@@ -1,9 +1,10 @@
 import 'dotenv/config';
 import express from 'express';
 import bodyParser from 'body-parser';
-import pg from "pg";
+import pg from 'pg';
 import cors from 'cors';
 import bcrypt from 'bcryptjs'; // Use bcryptjs
+import jwt from 'jsonwebtoken'; // Import JWT
 
 const db = new pg.Client({
     user: process.env.DB_USER, 
@@ -17,9 +18,23 @@ db.connect();
 
 const app = express();
 const port = 3000;
+const secretKey = process.env.JWT_SECRET || 'your_secret_key'; // Use a secret key from environment variables
 
 app.use(cors());
 app.use(bodyParser.json());
+
+// Middleware to authenticate JWT tokens
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (token == null) return res.sendStatus(401); // No token, unauthorized
+
+    jwt.verify(token, secretKey, (err, user) => {
+        if (err) return res.sendStatus(403); // Invalid token
+        req.user = user; // Attach user info to the request
+        next();
+    });
+};
 
 // Function to generate a hash from first name and last name
 const generateHash = async (fname, lname) => {
@@ -28,10 +43,32 @@ const generateHash = async (fname, lname) => {
     return hash;
 };
 
+// User login (for admin access)
+app.post("/api/v1/login", async (req, res) => {
+    const { username, password } = req.body;
+    try {
+        const user = await db.query("SELECT * FROM USERS WHERE username = $1;", [username]);
+        if (user.rows.length === 0) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        const validPassword = await bcrypt.compare(password, user.rows[0].password);
+        if (!validPassword) {
+            return res.status(401).json({ error: "Invalid password" });
+        }
+
+        const token = jwt.sign({ username: user.rows[0].username }, secretKey, { expiresIn: '1h' });
+        res.json({ token });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: 'Error logging in' });
+    }
+});
+
+// Example route for testing authentication
 app.get("/", async (req, res) => {
     try {
-        const response = await db.query("SELECT * FROM voting_room;");        
-        console.log(response);
+        const response = await db.query("SELECT * FROM voting_room;");
         res.json({
             "status": "Running",
             "rooms": response.rows,
@@ -41,12 +78,11 @@ app.get("/", async (req, res) => {
     }
 });
 
-// Create a voting room
-app.post("/api/v1/voting-room", async (req, res) => {
+// Create a voting room (Protected)
+app.post("/api/v1/voting-room", authenticateToken, async (req, res) => {
     try {
         const { name, description } = req.body;
         const response = await db.query("INSERT INTO VOTING_ROOM(name, description) VALUES($1, $2) RETURNING *;", [name, description]);
-        //console.log(response.rows);
         res.json({
             "status": "Created",
             "room_id": response.rows[0].room_id,
@@ -57,28 +93,25 @@ app.post("/api/v1/voting-room", async (req, res) => {
     }
 });
 
-// Add new Candidates
-app.post("/api/v1/candidates", async (req, res) => {
+// Add new Candidates (Protected)
+app.post("/api/v1/candidates", authenticateToken, async (req, res) => {
     const { fname, lname, room_id } = req.body;
-    //console.log(req.body);
     try {
         const add_candidate = await db.query("INSERT INTO CANDIDATE(fname, lname) VALUES($1, $2) RETURNING *;", [fname, lname]);
         const response = await db.query("INSERT INTO STANDING_IN(candidate_id, room_id) VALUES($1, $2) RETURNING *;", [add_candidate.rows[0].id, room_id]);
-        //console.log(response.rows);
-        res.json({ status: 'Candidate added', candidate_id: response.rows[0].candidate_id});
+        res.json({ status: 'Candidate added', candidate_id: response.rows[0].candidate_id });
     } catch (error) {
         console.log(error);
         res.status(500).json({ error: 'Error adding candidate' });
     }
 });
 
-// Add new Voters
-app.post("/api/v1/voters", async (req, res) => {
+// Add new Voters (Protected)
+app.post("/api/v1/voters", authenticateToken, async (req, res) => {
     const { fname, lname } = req.body;
     try {
         const hash = await generateHash(fname, lname);
         const response = await db.query("INSERT INTO VOTER(fname, lname, hash) VALUES($1, $2, $3) RETURNING *;", [fname, lname, hash]);
-        // console.log(response.rows);
         res.json({ status: 'Voter added', voter_id: response.rows[0].id });
     } catch (error) {
         console.log(error);
@@ -94,9 +127,9 @@ const authenticateVoter = async (voter_id) => {
     return null; 
 };
 
-// Vote for a Candidate
+// Vote for a Candidate (No Authentication required for casting votes)
 app.post("/api/v1/voting-room/:id/vote", async (req, res) => {
-    const { votes, voter_id, fname, lname } = req.body; // Get voter credentials from request
+    const { votes, voter_id, fname, lname } = req.body;
     const inputHash = `${fname.toLowerCase()}${lname.toLowerCase()}`;
     
     const voter = await authenticateVoter(voter_id);
@@ -110,13 +143,11 @@ app.post("/api/v1/voting-room/:id/vote", async (req, res) => {
     }
 
     try {
-        // check if votes add up to 10
         const totalVotes = Object.values(votes).reduce((a, b) => a + b);
         if (totalVotes != 10) {
             return res.status(400).json({ error: 'Votes must add up to 10' });
         }
 
-        // Check if voter has already voted
         const alreadyVoted = await db.query("SELECT * FROM VOTED_IN WHERE voter_id = $1 AND room_id = $2;", [voter.id, req.params.id]);
         if (alreadyVoted.rows.length > 0) {
             return res.json({ "status": "Already Voted" });
@@ -127,13 +158,11 @@ app.post("/api/v1/voting-room/:id/vote", async (req, res) => {
         for (const candidate of Object.keys(votes)) {
             const value = votes[candidate];
             if (value > 0) {
-                // Insert vote only if candidate exists
                 await db.query("INSERT INTO VOTE(room_id, candidate_id, n_votes, n_voted) SELECT $1, $2, $3, $4 WHERE EXISTS (SELECT 1 FROM STANDING_IN WHERE candidate_id = $2 AND room_id = $1);", 
                     [req.params.id, candidate, value, n]);
             }
         }
 
-        // Insert voter into voted_in to show that they have voted
         await db.query("INSERT INTO VOTED_IN(voter_id, room_id) VALUES($1, $2);", [voter.id, req.params.id]);
         res.json({ "status": "Voted" });
     } catch (error) {
@@ -142,7 +171,7 @@ app.post("/api/v1/voting-room/:id/vote", async (req, res) => {
     }
 });
 
-// Get the results
+// Get the results (No authentication required to view results)
 app.get("/api/v1/voting-room/:id/results", async (req, res) => {
     const decay = 0.1;
     try {
@@ -170,7 +199,6 @@ app.get("/api/v1/voting-room/:id/results", async (req, res) => {
         let winner = Object.keys(results).reduce((a, b) => results[a] > results[b] ? a : b);
         const ties = Object.keys(results).filter(candidate => results[candidate] === results[winner]);
         if (ties.length > 1) {
-            // The candidate with fewer ones wins
             winner = ties.reduce((a, b) => ones[a] < ones[b] ? a : b);
         }
 
